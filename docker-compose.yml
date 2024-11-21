@@ -1,4 +1,3 @@
-
 services:
   superset:
     image: apache/superset:latest
@@ -14,23 +13,27 @@ services:
       SECRET_KEY: 'JZYE1tXSjEje7ESXd5rcZHiSU3wYofeckvz5TUXfLziWj8mRVtXVRzA'
     volumes:
       - ./superset:/app/superset_home
-
+      - ./superset_config.py:/app/pythonpath/superset_config.py
+      - ./database_config.py:/app/pythonpath/database_config.py
     depends_on:
       - postgres
     command:
       - sh
       - -c
       - |
+        pip install flask-cors psycopg2-binary &&
         superset db upgrade &&
         superset fab create-admin --username admin --password admin --email admin@superset.com --firstname admin --lastname admin &&
         superset init &&
         superset run -h 0.0.0.0 -p 8088
+    networks:
+      - superset_network
 
   postgres:
     image: postgres:latest
     container_name: postgres
     ports:
-      - "5433:5432"
+      - "5436:5432"
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: Mbatha45
@@ -38,5 +41,12 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+    networks:
+      - superset_network
+
 volumes:
   postgres_data:
+
+networks:
+  superset_network:
+    driver: bridge
